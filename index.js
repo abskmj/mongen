@@ -1,75 +1,84 @@
+const promise = require('bluebird');
+
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+
 const fs = require('fs');
 const debug = require('debug')('mongen');
 const path = require('path');
 
+
 module.exports.init = (options, callback) => {
-    options = options || {};
+    try {
 
-    if (!options.mongo) {
-        throw new Error('Please provide a mongo connection url');
-    }
+        options = options || {};
 
-    if (!options.path) {
-        throw new Error('Please provide models directory path');
-    }
-
-    mongoose.connect(options.mongo);
-    mongoose.connection.on('error', console.error.bind(console, 'connection error:'));
-    mongoose.connection.once('open', () => {
-        debug('database connection successful');
-
-        let defs = {
-            models: {},
-            plugins: {}
-        };
-
-        walkDirectory(defs, options.path);
-
-        debug('//=== starting model processing ===//');
-
-        let models = {};
-
-        for (let modelKey in defs.models) {
-            debug('model key:', modelKey);
-            const modelDef = defs.models[modelKey];
-
-            if (modelDef.schema) {
-                const schemaDef = require(modelDef.schema);
-                let schema = new Schema(schemaDef.schema);
-
-                debug('created a new Schema from', modelDef.schema);
-
-                if (modelDef.func) {
-                    const funcDef = require(modelDef.func)(schema);
-
-                    debug('attached functions from', modelDef.func);
-                }
-
-
-                if (schemaDef.plugins) {
-                    schemaDef.plugins.forEach((pluginName) => {
-                        let plugin = defs.plugins[pluginName];
-                        if (!plugin) {
-                            throw new Error('Plugin not found:', pluginName);
-                        }
-                        else {
-                            schema.plugin(require(plugin));
-
-                            debug('atteched plugin from', plugin);
-                        }
-                    });
-                }
-
-                models[schemaDef.name] = mongoose.model(schemaDef.name, schema);
-
-                debug('created a new model with name', schemaDef.name);
-            }
+        if (!options.mongo) {
+            throw new Error('Please provide a mongo connection url');
         }
 
-        callback(null, mongoose);
-    });
+        if (!options.path) {
+            throw new Error('Please provide models directory path');
+        }
+
+        return mongoose.connect(options.mongo)
+            .then(() => {
+                debug('database connection successful');
+
+                let defs = {
+                    models: {},
+                    plugins: {}
+                };
+
+                walkDirectory(defs, options.path);
+
+                debug('//=== starting model processing ===//');
+
+                let models = {};
+
+                for (let modelKey in defs.models) {
+                    debug('model key:', modelKey);
+                    const modelDef = defs.models[modelKey];
+
+                    if (modelDef.schema) {
+                        const schemaDef = require(modelDef.schema);
+                        let schema = new Schema(schemaDef.schema);
+
+                        debug('created a new Schema from', modelDef.schema);
+
+                        if (modelDef.func) {
+                            const funcDef = require(modelDef.func)(schema);
+
+                            debug('attached functions from', modelDef.func);
+                        }
+
+
+                        if (schemaDef.plugins) {
+                            schemaDef.plugins.forEach((pluginName) => {
+                                let plugin = defs.plugins[pluginName];
+                                if (!plugin) {
+                                    throw new Error('Plugin not found:', pluginName);
+                                }
+                                else {
+                                    schema.plugin(require(plugin));
+
+                                    debug('atteched plugin from', plugin);
+                                }
+                            });
+                        }
+
+                        models[schemaDef.name] = mongoose.model(schemaDef.name, schema);
+
+                        debug('created a new model with name', schemaDef.name);
+                    }
+                }
+
+                return promise.resolve(mongoose).asCallback(callback);
+            });
+    }
+    catch (error) {
+        return promise.reject(error).asCallback(callback);
+    }
 }
 
 let walkDirectory = (defs, directoryPath) => {
