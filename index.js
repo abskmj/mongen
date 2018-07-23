@@ -20,17 +20,20 @@ module.exports.init = (options, callback) => {
     mongoose.connection.once('open', () => {
         debug('database connection successful');
 
-        let defs = {};
+        let defs = {
+            models: {},
+            plugins: {}
+        };
 
         walkDirectory(defs, options.path);
 
         debug('//=== starting model processing ===//');
-        
+
         let models = {};
 
-        for (let modelKey in defs) {
+        for (let modelKey in defs.models) {
             debug('model key:', modelKey);
-            const modelDef = defs[modelKey];
+            const modelDef = defs.models[modelKey];
 
             if (modelDef.schema) {
                 const schemaDef = require(modelDef.schema);
@@ -40,16 +43,31 @@ module.exports.init = (options, callback) => {
 
                 if (modelDef.func) {
                     const funcDef = require(modelDef.func)(schema);
-                    
+
                     debug('attached functions from', modelDef.func);
                 }
-                
+
+
+                if (schemaDef.plugins) {
+                    schemaDef.plugins.forEach((pluginName) => {
+                        let plugin = defs.plugins[pluginName];
+                        if (!plugin) {
+                            throw new Error('Plugin not found:', pluginName);
+                        }
+                        else {
+                            schema.plugin(require(plugin));
+
+                            debug('atteched plugin from', plugin);
+                        }
+                    });
+                }
+
                 models[schemaDef.name] = mongoose.model(schemaDef.name, schema);
-                
+
                 debug('created a new model with name', schemaDef.name);
             }
         }
-        
+
         callback(null, mongoose);
     });
 }
@@ -77,11 +95,11 @@ let walkDirectory = (defs, directoryPath) => {
 
                 debug('model name:', name);
 
-                if (!defs[name]) {
-                    defs[name] = {}
+                if (!defs.models[name]) {
+                    defs.models[name] = {}
                 }
 
-                defs[name].schema = filepath;
+                defs.models[name].schema = filepath;
             }
             else if (file.endsWith(functionExtention)) {
                 debug('is a function file');
@@ -90,13 +108,26 @@ let walkDirectory = (defs, directoryPath) => {
 
                 debug('model name:', name);
 
-                if (!defs[name]) {
-                    defs[name] = {}
+                if (!defs.models[name]) {
+                    defs.models[name] = {}
                 }
 
-                defs[name].func = filepath;
+                defs.models[name].func = filepath;
             }
-            else{
+            else if (file.endsWith(pluginExtension)) {
+                debug('is a plugin file');
+
+                let name = file.split(pluginExtension)[0];
+
+                debug('plugin name:', name);
+
+                if (!defs.plugins[name]) {
+                    defs.plugins[name] = {}
+                }
+
+                defs.plugins[name] = filepath;
+            }
+            else {
                 console.log('file with unknown purpose', filepath);
             }
 
