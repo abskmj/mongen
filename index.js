@@ -45,6 +45,7 @@ module.exports.init = (options, callback) => {
                         let schema = new Schema(schemaDef.schema, schemaDef.options);
 
                         debug('created a new Schema from', modelDef.schema);
+                        debug('with options:', schemaDef.options);
 
                         if (modelDef.func) {
                             const funcDef = require(modelDef.func)(schema);
@@ -54,17 +55,19 @@ module.exports.init = (options, callback) => {
 
 
                         if (schemaDef.plugins) {
-                            schemaDef.plugins.forEach((pluginName) => {
+                            for (let pluginName in schemaDef.plugins){
                                 let plugin = defs.plugins[pluginName];
                                 if (!plugin) {
                                     throw new Error('Plugin not found:', pluginName);
                                 }
                                 else {
-                                    schema.plugin(require(plugin));
+                                    let options = schemaDef.plugins[pluginName];
+                                    schema.plugin(require(plugin), options);
 
-                                    debug('atteched plugin from', plugin);
+                                    debug('attached plugin from', plugin);
+                                    debug('with options:', JSON.stringify(options));
                                 }
-                            });
+                            }
                         }
 
                         models[schemaDef.name] = mongoose.model(schemaDef.name, schema);
