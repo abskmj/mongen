@@ -42,7 +42,7 @@ module.exports.init = (options, callback) => {
 
                     if (modelDef.schema) {
                         const schemaDef = require(modelDef.schema);
-                        let schema = new Schema(schemaDef.schema);
+                        let schema = new Schema(schemaDef.schema, schemaDef.options);
 
                         debug('created a new Schema from', modelDef.schema);
 
