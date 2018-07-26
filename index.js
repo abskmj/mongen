@@ -21,7 +21,7 @@ module.exports.init = (options, callback) => {
             throw new Error('Please provide models directory path');
         }
 
-        return mongoose.connect(options.mongo)
+        return mongoose.connect(options.mongo, { useNewUrlParser: true })
             .then(() => {
                 debug('database connection successful');
 
