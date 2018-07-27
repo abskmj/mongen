@@ -3,15 +3,23 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "DEBUG=mongen nodemon test/test.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "author": "abskmj@gmail.com",
+  "license": "MIT",
+  "description": "It is a helper script to organise and initialize mongoose schemas, functions/methods and plugins.",
+  "keywords": [
+    "helper",
+    "mongoose",
+    "organize"
+  ],
   "dependencies": {
     "bluebird": "^3.5.1",
     "debug": "^3.1.0",
     "mongoose": "^5.2.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abskmj/mongen.git"
   }
 }
