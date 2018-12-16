@@ -6,7 +6,7 @@ const path = require('path');
 
 const debug = require('debug')('mongen');
 
-module.exports.init = (connection, path) => {
+module.exports.init = (connection, path, app) => {
 
     if (!connection || !connection.model) {
         throw new Error('Please provide a mongoose / connection');
@@ -38,8 +38,9 @@ module.exports.init = (connection, path) => {
             debug('created a new Schema from', modelDef.schema);
             debug('with options:', schemaDef.options);
 
+            // attach functions
             if (modelDef.func) {
-                const funcDef = require(modelDef.func)(schema);
+                const funcDef = require(modelDef.func)(schema, app);
 
                 debug('attached functions from', modelDef.func);
             }
@@ -68,6 +69,14 @@ module.exports.init = (connection, path) => {
 
 
                     let options = schemaDef.plugins[pluginName];
+
+                    // pass app into plugins
+                    if (typeof(options) !== 'object') {
+                        options = {};
+                    }
+
+                    options.app = app;
+
                     schema.plugin(plugin, options);
 
                     debug('attached plugin:', pluginName);
