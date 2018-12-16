@@ -1,6 +1,8 @@
 module.exports = {
     name: "Person",
-    plugins: {},
+    plugins: {
+        timestamps: true
+    },
     schema: {
         name: String,
         email: String

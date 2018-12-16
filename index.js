@@ -44,19 +44,35 @@ module.exports.init = (connection, path) => {
                 debug('attached functions from', modelDef.func);
             }
 
+            // attach plugins
             if (schemaDef.plugins) {
                 for (let pluginName in schemaDef.plugins) {
-                    let plugin = defs.plugins[pluginName];
-                    if (!plugin) {
-                        throw new Error(`Plugin not found with name ${pluginName}`);
+
+                    let pluginPath = defs.plugins[pluginName];
+                    let plugin;
+
+                    if (!pluginPath) {
+                        // if plugin is not available in local
+                        try {
+                            plugin = require(pluginName);
+                            pluginPath = require.resolve(pluginName);
+                        }
+                        catch (e) {
+                            // if plugin is not available as module
+                            throw new Error(`Plugin not found with name ${pluginName}`);
+                        }
                     }
                     else {
-                        let options = schemaDef.plugins[pluginName];
-                        schema.plugin(require(plugin), options);
-
-                        debug('attached plugin from', plugin);
-                        debug('with options:', JSON.stringify(options));
+                        plugin = require(pluginPath);
                     }
+
+
+                    let options = schemaDef.plugins[pluginName];
+                    schema.plugin(plugin, options);
+
+                    debug('attached plugin:', pluginName);
+                    debug('with options:', JSON.stringify(options));
+                    debug('from:', pluginPath)
                 }
             }
 
