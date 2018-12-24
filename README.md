@@ -10,14 +10,15 @@ const mongen = require('@abskmj/mongen');
 
 let connection = await mongoose.connect('mongodb://<user>:<password>@localhost:27017/test');
 
-mongen.init(connection, __dirname + '/models'){
-    let User = connection.model('User');
+// initialize and load all the models
+mongen.init(connection, __dirname + '/models');
+
+let User = connection.model('User');
     
-    let user = new User({
-        name: "ABC",
-        email: "abc@xyz.com"
-    });
-    
-    console.log(user.toJSON());
+let user = new User({
+    name: "ABC",
+    email: "abc@xyz.com"
 });
+    
+console.log(user.toJSON());
 ```
