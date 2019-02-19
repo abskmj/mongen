@@ -7,7 +7,6 @@ const path = require('path');
 const debug = require('debug')('mongen');
 
 module.exports.init = (connection, path, app) => {
-
     if (!connection || !connection.model) {
         throw new Error('Please provide a mongoose / connection');
     }
@@ -33,6 +32,8 @@ module.exports.init = (connection, path, app) => {
 
         if (modelDef.schema) {
             const schemaDef = require(modelDef.schema);
+            processObject(schemaDef);
+
             let schema = new Schema(schemaDef.schema, schemaDef.options);
 
             debug('created a new Schema from', modelDef.schema);
@@ -89,6 +90,42 @@ module.exports.init = (connection, path, app) => {
 
             debug('created a new model with name', schemaDef.name);
         }
+    }
+    
+    function processObject (object) {
+        for (let i in object) {        
+            switch(typeof object[i]) {
+                case "object":
+                    object[i] = processObject(object[i]);
+                    break;
+                case "string":
+                    object[i] = processString(object[i]);
+                    break;
+            }
+        }
+    
+        return object;
+    }
+    
+    function processString (string) {
+        if (string.indexOf("$.") === 0) {
+            string = string.substring(2, string.length);
+            string = resolve(app, string);
+        }
+
+        return string;
+    }  
+
+    function resolve (obj, path) {
+        path = path.split('.');
+        let current = obj;
+
+        while(path.length) {
+            if(![ 'function', 'object' ].includes(typeof current)) return undefined;
+            current = current[path.shift()];
+        }
+
+        return current;
     }
 }
 
