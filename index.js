@@ -31,7 +31,7 @@ module.exports.init = (connection, path, app) => {
         const modelDef = defs.models[modelKey];
 
         if (modelDef.schema) {
-            const schemaDef = require(modelDef.schema);
+            let schemaDef = require(modelDef.schema);
             schemaDef = processObject(schemaDef);
 
             let schema = new Schema(schemaDef.schema, schemaDef.options);
