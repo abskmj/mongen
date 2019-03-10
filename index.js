@@ -85,6 +85,23 @@ module.exports.init = (connection, path, app) => {
                 }
             }
 
+            //attach routes
+            if (schemaDef.router) {
+                const express = require('express');
+                let router = express.Router();
+
+                require(schemaDef.router)(router, app);
+
+                if (!(schema.statics.attachRouter instanceof Function)) {
+                    let pluginName = '@abskmj/mongen';
+                    let basePluginName = '@abskmj/mongoose-plugin-express';
+
+                    throw new Error(`${pluginName} is dependent on ${basePluginName}`);
+                }
+                
+                schema.statics.attachRouter(router);
+            }
+
             models[schemaDef.name] = mongoose.model(schemaDef.name, schema);
 
             debug('created a new model with name', schemaDef.name);
@@ -96,6 +113,7 @@ let walkDirectory = (defs, directoryPath) => {
     const schemaExtension = '.schema.js';
     const functionExtention = '.func.js';
     const pluginExtension = '.plugin.js';
+    const routerExtension = '.routes.js';
 
     let files = fs.readdirSync(directoryPath);
 
@@ -133,6 +151,19 @@ let walkDirectory = (defs, directoryPath) => {
                 }
 
                 defs.models[name].func = filepath;
+            }
+            else if (file.endsWith(routerExtension)) {
+                debug('is a router file');
+
+                let name = file.split(routerExtension)[0];
+
+                debug('model name:', name);
+
+                if (!defs.models[name]) {
+                    defs.models[name] = {}
+                }
+
+                defs.models[name].router = filepath;
             }
             else if (file.endsWith(pluginExtension)) {
                 debug('is a plugin file');
