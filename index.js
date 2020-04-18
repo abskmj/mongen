@@ -1,19 +1,17 @@
-const mongoose = require('mongoose')
-const Schema = mongoose.Schema
+const assert = require('assert')
+const Schema = require('mongoose').Schema
 
 const fs = require('fs')
 const path = require('path')
 
 const debug = require('debug')('mongen')
 
-module.exports.init = (connection, path, app) => {
-  if (!connection || !connection.model) {
-    throw new Error('Please provide a mongoose / connection')
-  }
-
-  if (!path) {
-    throw new Error('Please provide models directory path')
-  }
+module.exports.init = (path, app) => {
+  debug('Path provided:', path)
+  // validate if path exists and is a directory
+  assert(path, 'Path provided is not valid')
+  assert(fs.existsSync(path), 'Path provided doesn\'t exists')
+  assert(fs.lstatSync(path).isDirectory(), 'Path provided is not a directory')
 
   const defs = {
     models: {},
@@ -31,8 +29,7 @@ module.exports.init = (connection, path, app) => {
     const modelDef = defs.models[modelKey]
 
     if (modelDef.schema) {
-      let schemaDef = require(modelDef.schema)
-      schemaDef = processObject(schemaDef)
+      const schemaDef = require(modelDef.schema)
 
       const schema = new Schema(schemaDef.schema, schemaDef.options)
 
@@ -41,7 +38,7 @@ module.exports.init = (connection, path, app) => {
 
       // attach functions
       if (modelDef.func) {
-        const funcDef = require(modelDef.func)(schema, app)
+        require(modelDef.func)(schema, app)
 
         debug('attached functions from', modelDef.func)
       }
@@ -82,71 +79,19 @@ module.exports.init = (connection, path, app) => {
         }
       }
 
-      // attach routes
-      if (schemaDef.router) {
-        const express = require('express')
-        const router = express.Router()
-
-        require(schemaDef.router)(router, app)
-
-        if (!(schema.statics.attachRouter instanceof Function)) {
-          const pluginName = '@abskmj/mongen'
-          const basePluginName = '@abskmj/mongoose-plugin-express'
-
-          throw new Error(`${pluginName} is dependent on ${basePluginName}`)
-        }
-
-        schema.statics.attachRouter(router)
-      }
-
-      models[schemaDef.name] = mongoose.model(schemaDef.name, schema)
+      models[schemaDef.name] = schema
 
       debug('created a new model with name', schemaDef.name)
     }
   }
 
-  function processObject (object) {
-    for (const i in object) {
-      switch (typeof object[i]) {
-        case 'object':
-          object[i] = processObject(object[i])
-          break
-        case 'string':
-          object[i] = processString(object[i])
-          break
-      }
-    }
-
-    return object
-  }
-
-  function processString (string) {
-    if (string.indexOf('$.') === 0) {
-      string = string.substring(2, string.length)
-      string = resolve(app, string)
-    }
-
-    return string
-  }
-
-  function resolve (obj, path) {
-    path = path.split('.')
-    let current = obj
-
-    while (path.length) {
-      if (!['function', 'object'].includes(typeof current)) return undefined
-      current = current[path.shift()]
-    }
-
-    return current
-  }
+  return models
 }
 
 const walkDirectory = (defs, directoryPath) => {
   const schemaExtension = '.schema.js'
   const functionExtention = '.func.js'
   const pluginExtension = '.plugin.js'
-  const routerExtension = '.routes.js'
 
   const files = fs.readdirSync(directoryPath)
 
@@ -182,18 +127,6 @@ const walkDirectory = (defs, directoryPath) => {
         }
 
         defs.models[name].func = filepath
-      } else if (file.endsWith(routerExtension)) {
-        debug('is a router file')
-
-        const name = file.split(routerExtension)[0]
-
-        debug('model name:', name)
-
-        if (!defs.models[name]) {
-          defs.models[name] = {}
-        }
-
-        defs.models[name].router = filepath
       } else if (file.endsWith(pluginExtension)) {
         debug('is a plugin file')
 
