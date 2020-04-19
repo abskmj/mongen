@@ -1,35 +1,26 @@
-const expect = require("chai").expect;
-const mongoose = require("mongoose");
-
-const mongen = require("../index");
-const config = require('../config.json');
-
+const path = require('path')
+const Schema = require('mongoose').Schema
+const expect = require('chai').expect
+const mongen = require('../index')
 
 describe('Mongen', () => {
-    let connection;
+  let schemas
 
-    before(async() => {
-        connection = await mongoose.connect(config.mongo, { useNewUrlParser: true });
-        mongen.init(connection, __dirname + '/models');
-    });
+  before(async () => {
+    schemas = mongen.loadSchemas(path.join(__dirname, '/models'))
+  })
 
-    it('should initialize model', () => {
-        let Person = connection.model('Person');
-        
-        expect(Person).to.not.equal(null);
-        expect(Person).to.not.equal(undefined);
-    });
+  it('should return schemas', () => {
+    expect(schemas).to.be.an('object')
+    expect(schemas).to.haveOwnProperty('Person')
+    expect(schemas.Person).to.an.instanceOf(Schema)
+  })
 
-    it('should create a new model instance', async () => {
-        let Person = connection.model('Person');
-        
-        let person = new Person({
-            name: 'ABC',
-            email: 'abc@xyz.com'
-        });
-        
-        let saved = await person.save();
-        
-        expect(saved.name).to.equal("ABC");
-    });
-});
+  it('should load schema from .schema.js file', () => {
+    const personSchema = schemas.Person
+
+    expect(personSchema.paths).to.be.an('object')
+    expect(personSchema.paths).to.haveOwnProperty('name')
+    expect(personSchema.paths).to.haveOwnProperty('email')
+  })
+})
