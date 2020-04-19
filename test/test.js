@@ -7,12 +7,20 @@ describe('Mongen', () => {
   let schemas
 
   before(async () => {
-    schemas = mongen.init(path.join(__dirname, '/models'))
+    schemas = mongen.loadSchemas(path.join(__dirname, '/models'))
   })
 
   it('should return schemas', () => {
     expect(schemas).to.be.an('object')
     expect(schemas).to.haveOwnProperty('Person')
     expect(schemas.Person).to.an.instanceOf(Schema)
+  })
+
+  it('should load schema from .schema.js file', () => {
+    const personSchema = schemas.Person
+
+    expect(personSchema.paths).to.be.an('object')
+    expect(personSchema.paths).to.haveOwnProperty('name')
+    expect(personSchema.paths).to.haveOwnProperty('email')
   })
 })

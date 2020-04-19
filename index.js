@@ -6,7 +6,7 @@ const path = require('path')
 
 const debug = require('debug')('mongen')
 
-module.exports.init = (path, app) => {
+module.exports.loadSchemas = (path, app) => {
   debug('Path provided:', path)
   // validate if path exists and is a directory
   assert(path, 'Path provided is not valid')
