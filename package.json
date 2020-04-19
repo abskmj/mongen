@@ -1,13 +1,13 @@
 {
   "name": "@abskmj/mongen",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "main": "index.js",
   "scripts": {
     "test": "nodemon --exec \"DEBUG=mongen mocha\""
   },
   "author": "abskmj@gmail.com",
   "license": "MIT",
-  "description": "It is a helper script to organise and initialize mongoose schemas, functions/methods and plugins.",
+  "description": "Mongen is a helper script, which reads and puts together Mongoose schemas from an organized file structure. It aims to suggest a standard way of defining Mongoose models within a project.",
   "keywords": [
     "helper",
     "mongoose",
