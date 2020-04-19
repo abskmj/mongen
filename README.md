@@ -15,7 +15,7 @@ Mongen supports definition file types, which call out which aspect of the model 
   |-- timestamps.plugin.js  
 ```
 
-## When not using Mongen
+## Without Mongen
 Generally, a single file contains a Mongoose model related code with schema, functions, and plugins. Each member within the team might end up writing the models in their preferred way. Here is an example,
 
 ```javascript
@@ -74,7 +74,7 @@ let User = mongoose.model('User', schemas.User);
 ```
 
 # Functions
-## Mongen.loadSchemas(connection, path, app)
+## Mongen.loadSchemas(path, app)
 It reads definition files and puts together Mongoose schemas. It returns the schemas as an object. 
 
 | Parameter | Type | Description |
