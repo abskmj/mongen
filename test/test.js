@@ -20,7 +20,21 @@ describe('Mongen', () => {
     const personSchema = schemas.Person
 
     expect(personSchema.paths).to.be.an('object')
-    expect(personSchema.paths).to.haveOwnProperty('name')
+    expect(personSchema.paths).to.haveOwnProperty('name.first')
     expect(personSchema.paths).to.haveOwnProperty('email')
+  })
+
+  it('should load functions from .func.js file', () => {
+    const personSchema = schemas.Person
+
+    expect(personSchema.virtuals).to.be.an('object')
+    expect(personSchema.virtuals).to.haveOwnProperty('fullName')
+  })
+
+  it('should load plugin from .plugin.js file', () => {
+    const personSchema = schemas.Person
+
+    expect(personSchema.paths).to.be.an('object')
+    expect(personSchema.paths).to.haveOwnProperty('createdAt')
   })
 })

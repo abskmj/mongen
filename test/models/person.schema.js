@@ -4,7 +4,10 @@ module.exports = {
     timestamps: true
   },
   schema: {
-    name: String,
+    name: {
+      first: String,
+      last: String
+    },
     email: String
   },
   options: {}
